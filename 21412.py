@@ -1,14 +1,18 @@
 import tkinter as tk
 
 root = tk.Tk()
+root.geometry("400x300")
 
-label = tk.Label(root, text="This is a label")
-label.grid(row=0, column=0, sticky="nsew")  # Expand in all directions
+label1 = tk.Label(root, text="Absolute (x, y)")
+label1.place(x=50, y=50)
 
-button = tk.Button(root, text="Click Me")
-button.grid(row=1, column=0, sticky="w")  # Stick to the left (west) side
+label2 = tk.Label(root, text="Relative (relx, rely)")
+label2.place(relx=0, rely=0.5)  
 
-root.grid_rowconfigure(0, weight=1)  # Row 0 expands when window is resized
-root.grid_columnconfigure(0, weight=1)  # Column 0 expands when window is resized
+label3 = tk.Label(root, text="Anchor NW")
+label3.place(x=200, y=150, anchor="e")
+
+button = tk.Button(root, text="Centered Button")
+button.place(relx=0.5, rely=0.5, anchor="center", width=120, height=40)
 
 root.mainloop()
