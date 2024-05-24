@@ -42,8 +42,8 @@ def create_new_window2(parent):
     label = customtkinter.CTkLabel(master=frame, text="Welcome to the Dashboard!", font=('Century Gothic', 20))
     label.pack(pady=20)
 
-    label2 = customtkinter.CTkLabel(master=home, text="Welcome to the Dashboard!", font=('Century Gothic', 20))
-    label2.place(x=10, y=100)
+    #label2 = customtkinter.CTkLabel(master=home, text="Welcome to the Dashboard!", font=('Century Gothic', 20))
+    #label2.place(x=10, y=100)
     dataframe_placeholder = customtkinter.CTkLabel(master=frame, text="")
     dataframe_placeholder.pack(pady=20)
 
