@@ -7,6 +7,8 @@ from tkinter import filedialog, ttk
 from tkinter import *
 from PIL import ImageTk, Image
 import matplotlib.pyplot as plt
+import statistics
+import os
 
 global_filepath = None  # Global variable to store the file path
 
@@ -65,52 +67,61 @@ def create_new_window2(parent):
         # Display the DataFrame in a Treeview
         display_df(df, frame)
 
-    def display_df(df, frame):
-        # Create a frame for the table
-        table_frame = customtkinter.CTkFrame(frame)
-        table_frame.pack(pady=20, padx=10, fill=tk.BOTH, expand=True)
+    def display_df(df, master):
+        table_frame = customtkinter.CTkFrame(master)
+        table_frame.pack(pady=20, padx=10, fill=tk.BOTH, expand=True)  # Add padding and expand/fill
 
-        # Insert new column for row numbers
+        # Insert new column before 'OrderID'
         df.insert(0, 'Row Number', range(1, len(df) + 1))
-
+    
+        global tree
+        global y_scrollbar
+        global x_scrollbar
         # Create Treeview with scrollbars
         tree = ttk.Treeview(table_frame, height=10)
         tree["columns"] = list(df.columns)
-        tree["show"] = "headings"  # Hide the default first empty column
+        tree["show"] = "headings" # Hide the default first empty column
 
         # Configure column headers
         for col in df.columns:
             tree.heading(col, text=col, anchor="center")
             tree.column(col, width=100, anchor="center")
 
-        # Insert data into Treeview
+
+        #max_width = max(df[col].astype(str).map(len)) + 5  
+        #tree.column(col, width=max_width * 6)  # Adjust the multiplier (8) as needed
+        #tree.column(col, width=100)  # Adjust width as needed
+
+
+
+        # Insert data
         for index, row in df.iterrows():
             tree.insert("", tk.END, values=list(row), tags=('centered',))
+            #tree.insert("", tk.END, values=list(row))
 
         tree.tag_configure('centered', anchor='center')
-
-        def toggle_table():
-            if tree.winfo_ismapped():
-                tree.pack_forget()  # Hide the Treeview
-                view_button.configure(text="View CSV")
-            else:
-                tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)  # Show the Treeview
-                view_button.configure(text="Hide CSV")
-
         # Create and configure scrollbars
         y_scrollbar = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=tree.yview)
         x_scrollbar = ttk.Scrollbar(table_frame, orient=tk.HORIZONTAL, command=tree.xview)
         tree.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
 
         # Initially hide the Treeview
-        tree.pack_forget()
+        tree.pack_forget() 
 
-        # Create the "View CSV" button
+        def toggle_table():
+            if tree.winfo_ismapped():
+                tree.pack_forget() # Hide the Treeview
+                view_button.configure(text="View CSV")
+            else:
+                tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True) # Show the Treeview
+                view_button.configure(text="Hide CSV")
+    
+            # Create the "View CSV" button
         view_button = tk.Button(master=frame, text="View CSV", command=toggle_table)
         view_button.pack(side=BOTTOM, pady=15)
 
         y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        #x_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        x_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def analyze_ratings():
         if not global_filepath:
@@ -124,26 +135,70 @@ def create_new_window2(parent):
         ratings = df["rating_star"]
 
         # Calculate statistics
-        mean_rating = ratings.mean()
-        median_rating = ratings.median()
-        mode_rating = ratings.mode()[0]  # Get the first mode if there are multiple
-        std_dev = ratings.std()
+        mean_rating = statistics.mean(ratings)
+        median_rating = statistics.median(ratings)
+        try:
+            mode_rating = statistics.mode(ratings)  # Get the mode
+        except statistics.StatisticsError:
+            mode_rating = "No mode"  # Handle the case with no unique mode  # Get the first mode if there are multiple
+        variance = statistics.variance(ratings)
+        std_dev = statistics.stdev(ratings)
+        
 
         # Print the results
         result_text = (f"Mean Rating: {mean_rating}\n"
                        f"Median Rating: {median_rating}\n"
                        f"Mode Rating: {mode_rating}\n"
+                       f"Variance: {variance}\n"
                        f"Standard Deviation: {std_dev}")
 
         messagebox.showinfo("Ratings Analysis", result_text)
 
-        # Distribution analysis (histogram)
         plt.hist(ratings, bins=20, edgecolor='black')  # Adjust bins as needed
+
+        # Plot mean, median, mode
+        plt.axvline(mean_rating, color='red', linestyle='dashed', linewidth=1)
+        plt.axvline(median_rating, color='blue', linestyle='dashed', linewidth=1)
+        if mode_rating != "No mode":
+            plt.axvline(mode_rating, color='green', linestyle='dashed', linewidth=1)
+        
+        # Add text for mean, median, mode
+        plt.text(mean_rating, plt.ylim()[1]*0.9, 'Mean', color='red', ha='center')
+        plt.text(median_rating, plt.ylim()[1]*0.8, 'Median', color='blue', ha='center')
+        if mode_rating != "No mode":
+            plt.text(mode_rating, plt.ylim()[1]*0.7, 'Mode', color='green', ha='center')
+        
         plt.xlabel('Rating Score')
         plt.ylabel('Frequency')
         plt.title('Distribution of Customer Ratings')
         plt.show()
 
+    def remove_csv():
+        global global_filepath
+        global tree
+        global y_scrollbar
+        global x_scrollbar
+        if global_filepath:
+            try:
+                # Delete the csv file
+                os.remove(global_filepath)
+                # Destroy table_frame and its children
+                if tree:
+                    tree.destroy()
+                if y_scrollbar:
+                    y_scrollbar.destroy()
+                if x_scrollbar:
+                    x_scrollbar.destroy()
+                messagebox.showinfo("Success", "CSV file removed successfully!")
+                global_filepath = None
+            
+            
+            except FileNotFoundError:
+                messagebox.showerror("Error", "File not found.")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred while deleting: {e}")
+        else:
+            messagebox.showinfo("Info", "No CSV file to remove.")
     def exit_program():
         home.quit()  # This will close the application
     
@@ -151,6 +206,9 @@ def create_new_window2(parent):
     upload_button = customtkinter.CTkButton(master=frame, text="Upload CSV", command=upload_csv)
     upload_button.pack(side=BOTTOM, pady=20, padx=10)
 
+    #remove_button = customtkinter.CTkButton(master=frame, text="Remove CSV", command=lambda: remove_csv(frame))
+    remove_button = customtkinter.CTkButton(master=frame, text="Remove CSV", command=remove_csv())  
+    remove_button.pack(side=tk.BOTTOM, pady=10)
     # Create the "Analyze Ratings" button
     analyze_button = customtkinter.CTkButton(master=home, text="Analyze Ratings", command=analyze_ratings)
     analyze_button.place(x=10, y=400)

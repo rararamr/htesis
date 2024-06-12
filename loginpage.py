@@ -7,8 +7,8 @@ from mysql.connector import Error
 from PIL import ImageTk, Image
 import connection
 import registration
-#import homepage
-import homepage2
+import homepage
+#import homepage2
 #from utils import common_function
 
 conn = connection.conn
@@ -60,7 +60,7 @@ def reg_window():
     registration.create_new_window(form)
     form.withdraw()
 def home_window():
-    homepage2.create_new_window2(form)
+    homepage.create_new_window2(form)
     form.destroy()
 
 l2=customtkinter.CTkLabel(master=frame, text="Log into your Account",font=('Century Gothic',20))
