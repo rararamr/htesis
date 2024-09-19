@@ -1,16 +1,16 @@
 import tkinter as tk
 import customtkinter
 import pandas as pd
+from tkinter import *
 from tkinter import messagebox
 from customtkinter import *
 from tkinter import filedialog, ttk
-from tkinter import *
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageEnhance
 import matplotlib.pyplot as plt
-import statistics
-import os
+import statistics, os
 
 global_filepath = None  # Global variable to store the file path
+
 
 def create_new_window2(parent):
     # Destroy the parent window
@@ -30,10 +30,14 @@ def create_new_window2(parent):
     home.geometry('%dx%d+%d+%d' % (form_width, form_height, x, y))
 
     # Load and display an image
-    img1 = Image.open('back.jpg')
-    resized_img = img1.resize((form_width, form_height))
-    img1 = ImageTk.PhotoImage(resized_img)
-    l2 = customtkinter.CTkLabel(master=home, image=img1)
+    img1 = Image.open('back1.png').convert('RGB')
+    resized_img = img1.resize((form_width, form_height), Image.Resampling.LANCZOS)
+    enhancer = ImageEnhance.Brightness(resized_img)
+    adjusted_img = enhancer.enhance(0.5)  # Lower the brightness a bit
+    img1_tk = ImageTk.PhotoImage(adjusted_img)
+    l2 = Label(home, image=img1_tk)
+    l2.image = img1_tk
+    #l2 = customtkinter.CTkLabel(master=home, image=img1)
     l2.pack(fill=BOTH, expand=True)
 
     frame = customtkinter.CTkFrame(master=l2, width=900, height=460, corner_radius=15)
@@ -43,11 +47,32 @@ def create_new_window2(parent):
     label = customtkinter.CTkLabel(master=frame, text="Welcome to the Dashboard!", font=('Century Gothic', 20))
     label.pack(pady=20)
 
-    label2 = customtkinter.CTkLabel(master=home, text="Welcome to the Dashboard!", font=('Century Gothic', 20))
+    label2 = customtkinter.CTkLabel(master=home, text="CONTROL PANEL", font=('Century Gothic', 30))
     label2.place(x=10, y=100)
     dataframe_placeholder = customtkinter.CTkLabel(master=frame, text="")
     dataframe_placeholder.pack(pady=20)
+    
+    def resize_image(event):
+        # Get the new dimensions of the window
+        new_width = event.width
+        new_height = event.height
 
+        # Avoid resizing below a certain size to prevent errors
+        if new_width > 300 and new_height > 300:
+            # Resize the original image to fit the new window size
+            new_img = img1.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+            # Convert the resized image to a PhotoImage
+            new_img_tk = ImageTk.PhotoImage(new_img)
+
+            # Update the label with the new image
+            l2.configure(image=new_img_tk)
+            l2.image = new_img_tk  # Keep a reference to avoid garbage collection
+
+    # Bind the resize event to the window
+    home.bind("<Configure>", resize_image)
+
+    
     def upload_csv():
         global global_filepath  # Declare the global variable
         # Open file dialog to select a CSV file
@@ -77,6 +102,8 @@ def create_new_window2(parent):
         global tree
         global y_scrollbar
         global x_scrollbar
+        
+        
         # Create Treeview with scrollbars
         tree = ttk.Treeview(table_frame, height=10)
         tree["columns"] = list(df.columns)
@@ -106,9 +133,10 @@ def create_new_window2(parent):
         tree.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
 
         # Initially hide the Treeview
-        tree.pack_forget() 
+        #tree.pack_forget() 
 
         def toggle_table():
+
             if tree.winfo_ismapped():
                 tree.pack_forget() # Hide the Treeview
                 view_button.configure(text="View CSV")
@@ -117,8 +145,8 @@ def create_new_window2(parent):
                 view_button.configure(text="Hide CSV")
     
             # Create the "View CSV" button
-        view_button = tk.Button(master=frame, text="View CSV", command=toggle_table)
-        view_button.pack(side=BOTTOM, pady=15)
+        view_button = tk.Button(master=home, text="View CSV", command=toggle_table)
+        view_button.place(x=10, y=300)
 
         y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         x_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
@@ -199,21 +227,29 @@ def create_new_window2(parent):
                 messagebox.showerror("Error", f"An error occurred while deleting: {e}")
         else:
             messagebox.showinfo("Info", "No CSV file to remove.")
+    
+    def settings():
+        print('ily')
+    
     def exit_program():
         home.quit()  # This will close the application
     
     # Create the "Upload CSV" button
-    upload_button = customtkinter.CTkButton(master=frame, text="Upload CSV", command=upload_csv)
-    upload_button.pack(side=BOTTOM, pady=20, padx=10)
+    upload_button = customtkinter.CTkButton(master=home, text="Upload CSV", command=upload_csv)
+    upload_button.place(x=10, y=250)
 
     #remove_button = customtkinter.CTkButton(master=frame, text="Remove CSV", command=lambda: remove_csv(frame))
-    remove_button = customtkinter.CTkButton(master=frame, text="Remove CSV", command=remove_csv())  
-    remove_button.pack(side=tk.BOTTOM, pady=10)
+    remove_button = customtkinter.CTkButton(master=home, text="Remove CSV", fg_color="#787276", command=remove_csv)  
+    remove_button.place(x=10, y=350)
     # Create the "Analyze Ratings" button
-    analyze_button = customtkinter.CTkButton(master=home, text="Analyze Ratings", command=analyze_ratings)
+    analyze_button = customtkinter.CTkButton(master=home, text="Analyze Ratings", fg_color="#FFD700", command=analyze_ratings)
+    analyze_button.configure(text_color="black")
     analyze_button.place(x=10, y=400)
 
-    exit_button = customtkinter.CTkButton(master=home, text="Exit", command=exit_program, fg_color="#2B2B2B", text_color="white", hover_color="#FF0000", width=120)
+    exit_button = customtkinter.CTkButton(master=home, text="Exit", command=exit_program, fg_color="red", text_color="white", hover_color="#FF0000")
     exit_button.place(x=10, y=450)
+    
+    settings_button = customtkinter.CTkButton(master=home, text="Settings", command=settings, fg_color="green", text_color="white", hover_color="#FF0000")
+    settings_button.place(x=10, y=500)
     # Mainloop for the new window
     home.mainloop()

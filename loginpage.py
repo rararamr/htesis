@@ -1,15 +1,12 @@
 import tkinter
 import customtkinter
-from customtkinter import *
-from tkinter import *
 from tkinter import messagebox
 from mysql.connector import Error
 from PIL import ImageTk, Image
 import connection
 import registration
 import homepage
-#import homepage2
-#from utils import common_function
+
 
 conn = connection.conn
 

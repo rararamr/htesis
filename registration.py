@@ -1,9 +1,6 @@
 import tkinter as tk
-from tkinter import *
 from tkinter import messagebox
 import customtkinter
-from customtkinter import CTkToplevel
-from customtkinter import *
 from PIL import ImageTk, Image
 import connection
 import mysql
